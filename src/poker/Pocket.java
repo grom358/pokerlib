@@ -3,6 +3,9 @@
  */
 package poker;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 /**
  * Pocket cards in Texas Holdem
  *
@@ -11,6 +14,15 @@ package poker;
 public class Pocket {
     private Card first;
     private Card second;
+
+    public Pocket(Collection<Card> cards) {
+        if (cards.size() < 2) {
+            throw new IllegalArgumentException("Cards is too small to create pocket with");
+        }
+        Iterator<Card> it = cards.iterator();
+        this.first = it.next();
+        this.second = it.next();
+    }
 
     public Pocket(Card first, Card second) {
         // Make first the highest card
