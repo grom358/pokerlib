@@ -87,7 +87,8 @@ public class Hand implements Comparable<Hand> {
         }
 
         // Straight flush
-        for (int i = 0, n = Card.Rank.size - 5; i < n; ++i) {
+        for (int i = 0, n = (Card.Rank.size * Card.Suit.size) - (4 * Card.Suit.size);
+                i < n; ++i) {
             mask = STRAIGHT_FLUSH_MASK << i;
             test = val & mask;
             if (test == mask) {
@@ -140,7 +141,7 @@ public class Hand implements Comparable<Hand> {
         // Search for straight
         int straightLength = 0;
         long straight = 0;
-        for (int i = 0, n = Card.Rank.size - 5; i < n; ++i) {
+        for (int i = 0, n = Card.Rank.size; i < n; ++i) {
             mask = RANK_MASK << (i * Card.Suit.size);
             test = val & mask;
             if (test != 0) {
@@ -151,6 +152,14 @@ public class Hand implements Comparable<Hand> {
                 straight = 0;
             }
             if (straightLength == 5) {
+                return handValue(Category.STRAIGHT, new CardSet(straight));
+            }
+        }
+        // Test for ace low straight
+        if (straightLength == 4) {
+            test = val & RANK_MASK;
+            if (test != 0) {
+                straight |= Long.lowestOneBit(test);
                 return handValue(Category.STRAIGHT, new CardSet(straight));
             }
         }
