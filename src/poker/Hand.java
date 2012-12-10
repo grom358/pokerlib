@@ -191,7 +191,7 @@ public class Hand implements Comparable<Hand> {
         }
 
         // High card
-        return handValue(Category.HIGH_CARD, cs);
+        return handValue(Category.HIGH_CARD, cs.subList(5));
     }
 
     static public Hand eval(Collection<Card> hand, Collection<Card> board) {
