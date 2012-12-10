@@ -186,7 +186,7 @@ public class Hand implements Comparable<Hand> {
             CardList hand = topPair.toList();
             CardSet ks = new CardSet(cs);
             ks.subtract(topPair);
-            hand.addAll(ks.subList(4));
+            hand.addAll(ks.subList(3));
             return handValue(Category.PAIR, hand);
         }
 
