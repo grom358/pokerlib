@@ -149,13 +149,21 @@ public final class Card implements Comparable<Card> {
 
     static public Card valueOf(int index) {
         if (index < 0 || index > protoDeck.size()) {
-            throw new IllegalArgumentException("Invalid card");
+            throw new IllegalArgumentException("Invalid card; index=" + index);
         }
         return protoDeck.get(index);
     }
 
     static public Card valueOf(long num) {
-        int index = Long.numberOfLeadingZeros(num);
+        int index;
+        if (num == 0) {
+            index = 0;
+        } else {
+            index = Long.numberOfTrailingZeros(num);
+        }
+        if (index < 0 || index > protoDeck.size()) {
+            throw new IllegalArgumentException("Invalid card; num=" + num);
+        }
         return valueOf(index);
     }
 
