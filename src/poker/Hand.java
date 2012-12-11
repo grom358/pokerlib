@@ -50,6 +50,18 @@ public class Hand implements Comparable<Hand> {
         return o.handValue - handValue;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(category.toString());
+        sb.append(" - ");
+        sb.append(cardList);
+        sb.append(" (");
+        sb.append(handValue);
+        sb.append(')');
+        return sb.toString();
+    }
+
     static private final long STRAIGHT_FLUSH_MASK = 0x11111L;
     static private final long ACE_LOW_STRAIGHT_FLUSH_MASK = 0x1111000000001L;
     static private final long SUIT_MASK = 0x1111111111111L;
