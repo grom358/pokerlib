@@ -20,19 +20,26 @@ public class Pocket {
             throw new IllegalArgumentException("Cards is too small to create pocket with");
         }
         Iterator<Card> it = cards.iterator();
-        this.first = it.next();
-        this.second = it.next();
+        Card first = it.next();
+        Card second = it.next();
+        if (first.rankValue() < second.rankValue()) {
+            this.first = second;
+            this.second = first;
+        } else {
+            this.first = first;
+            this.second = second;
+        }
     }
 
     public Pocket(Card first, Card second) {
         // Make first the highest card
         if (first.rankValue() < second.rankValue()) {
-            Card tmp = first;
-            first = second;
-            second = tmp;
+            this.first = second;
+            this.second = first;
+        } else {
+            this.first = first;
+            this.second = second;
         }
-        this.first = first;
-        this.second = second;
     }
 
     public Card getFirst() {
