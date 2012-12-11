@@ -38,6 +38,13 @@ public class Eval {
     }
 
     @Test
+    public void aceLowStraightFlush() {
+        CardList aceLow = CardList.valueOf("[Ah,2h,3h,4h,5h]");
+        CardList sixHigh = CardList.valueOf("[2h,3h,4h,5h,6h]");
+        assertTrue(Hand.eval(new CardSet(aceLow)).getValue() < Hand.eval(new CardSet(sixHigh)).getValue());
+    }
+
+    @Test
     public void fourOfAKind() {
         assertCategory(Hand.Category.FOUR_OF_A_KIND, "[Ac,Ad,Ah,As,3c]");
     }
@@ -62,6 +69,13 @@ public class Eval {
         assertCategory(Hand.Category.STRAIGHT, "[2h,3d,4h,5s,6h]");
         assertCategory(Hand.Category.STRAIGHT, "[4d,5h,6s,7h,8c]");
         assertCategory(Hand.Category.STRAIGHT, "[8h,9c,Th,Js,Qh]");
+    }
+
+    @Test
+    public void aceLowStraight() {
+        CardList aceLow = CardList.valueOf("[Ah,2d,3h,4s,5c]");
+        CardList sixHigh = CardList.valueOf("[2d,3h,4s,5h,6c]");
+        assertTrue(Hand.eval(new CardSet(aceLow)).getValue() < Hand.eval(new CardSet(sixHigh)).getValue());
     }
 
     @Test

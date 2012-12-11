@@ -94,7 +94,10 @@ public class Hand implements Comparable<Hand> {
             mask = ACE_LOW_STRAIGHT_FLUSH_MASK << i;
             test = val & mask;
             if (test == mask) {
-                return handValue(Category.STRAIGHT_FLUSH, new CardSet(test));
+                CardSet handSet = new CardSet(test);
+                CardList cardList = handSet.toList();
+                cardList.add(cardList.remove(0)); // Make the ace low
+                return handValue(Category.STRAIGHT_FLUSH, cardList);
             }
         }
 
@@ -172,7 +175,10 @@ public class Hand implements Comparable<Hand> {
             test = val & RANK_MASK;
             if (test != 0) {
                 straight |= Long.lowestOneBit(test);
-                return handValue(Category.STRAIGHT, new CardSet(straight));
+                CardSet handSet = new CardSet(straight);
+                CardList cardList = handSet.toList();
+                cardList.add(cardList.remove(0)); // Make the ace low
+                return handValue(Category.STRAIGHT, cardList);
             }
         }
 
