@@ -89,6 +89,16 @@ public class Hand implements Comparable<Hand> {
         long val = cs.longValue();
         long test, mask;
 
+        // Straight flush
+        for (int i = 0, n = (Card.Rank.size * Card.Suit.size) - (4 * Card.Suit.size);
+                i < n; ++i) {
+            mask = STRAIGHT_FLUSH_MASK << i;
+            test = val & mask;
+            if (test == mask) {
+                return handValue(Category.STRAIGHT_FLUSH, new CardSet(test));
+            }
+        }
+
         // Ace low straight flush
         for (int i = 0, n = Card.Suit.size; i < n; ++i) {
             mask = ACE_LOW_STRAIGHT_FLUSH_MASK << i;
@@ -98,16 +108,6 @@ public class Hand implements Comparable<Hand> {
                 CardList cardList = handSet.toList();
                 cardList.add(cardList.remove(0)); // Make the ace low
                 return handValue(Category.STRAIGHT_FLUSH, cardList);
-            }
-        }
-
-        // Straight flush
-        for (int i = 0, n = (Card.Rank.size * Card.Suit.size) - (4 * Card.Suit.size);
-                i < n; ++i) {
-            mask = STRAIGHT_FLUSH_MASK << i;
-            test = val & mask;
-            if (test == mask) {
-                return handValue(Category.STRAIGHT_FLUSH, new CardSet(test));
             }
         }
 
@@ -281,20 +281,6 @@ public class Hand implements Comparable<Hand> {
         long clubs = (cardMask >> 3) & SUIT_MASK;
         long ranks = (spades | hearts | diamonds | clubs);
 
-        // Ace low straight flush
-        if ((spades & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
-            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
-        }
-        if ((hearts & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
-            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
-        }
-        if ((diamonds & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
-            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
-        }
-        if ((clubs & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
-            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
-        }
-
         // Straight flush
         for (int i = 0; i <= 8; ++i) {
             long handMask = (STRAIGHT_FLUSH_MASK << (i << 2));
@@ -310,6 +296,20 @@ public class Hand implements Comparable<Hand> {
             if ((clubs & handMask) == handMask) {
                 return STRAIGHT_FLUSH | encodeRanks(handMask, 5);
             }
+        }
+
+        // Ace low straight flush
+        if ((spades & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
+        }
+        if ((hearts & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
+        }
+        if ((diamonds & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
+        }
+        if ((clubs & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
         }
 
         // Four of a kind
@@ -364,19 +364,19 @@ public class Hand implements Comparable<Hand> {
         }
 
         // Straight
-        if ((ranks & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
-            return STRAIGHT | ACE_LOW_STRAIGHT;
-        }
         for (int i = 0; i <= 8; ++i) {
             long handMask = (STRAIGHT_FLUSH_MASK << (i << 2));
             if ((ranks & handMask) == handMask) {
                 return STRAIGHT | encodeRanks(handMask, 5);
             }
         }
+        if ((ranks & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT | ACE_LOW_STRAIGHT;
+        }
 
         // Three of kind
-        long kickers = ranks & ~sets;
         if (triple != 0) {
+            long kickers = ranks & ~triple;
             return THREE_OF_A_KIND |
                 (tripleRank << 16) |
                 (tripleRank << 12) |
@@ -387,19 +387,24 @@ public class Hand implements Comparable<Hand> {
         // Two pair
         if (setCount > 1) {
             int pairs = encodeRanks(sets, 2);
-            int topPair = pairs >> 4;
-            int secondPair = pairs & 0xF;
+            int topPairRank = pairs >> 4;
+            int secondPairRank = pairs & 0xF;
+            long topPair = Long.lowestOneBit(sets);
+            sets &= ~topPair;
+            long secondPair = Long.lowestOneBit(sets);
+            long kickers = ranks & ~topPair & ~secondPair;
             return TWO_PAIR |
-                    (topPair << 16) |
-                    (topPair << 12) |
-                    (secondPair << 8) |
-                    (secondPair << 4) |
+                    (topPairRank << 16) |
+                    (topPairRank << 12) |
+                    (secondPairRank << 8) |
+                    (secondPairRank << 4) |
                     encodeRanks(kickers, 1);
         }
 
         // Pair
         if (setCount == 1) {
             int pair = encodeRanks(sets, 1);
+            long kickers = ranks & ~sets;
             return PAIR | (pair << 16) | (pair << 12) | encodeRanks(kickers, 3);
         }
 

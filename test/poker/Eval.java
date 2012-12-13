@@ -97,4 +97,33 @@ public class Eval {
     public void highCard() {
         assertCategory(Hand.Category.HIGH_CARD, "[Ac,Jd,8c,7c,3s]");
     }
+
+    @Test
+    public void fastEvalMatches() {
+        for (int a = 0; a < 46; ++a) {
+            for (int b = a + 1; b < 47; ++b) {
+                for (int c = b + 1; c < 48; ++c) {
+                    for (int d = c + 1; d < 49; ++d) {
+                        for (int e = d + 1; e < 50; ++e) {
+                            for (int f = e + 1; f < 51; ++f) {
+                                for (int g = f + 1; g < 52; ++g) {
+                                   CardSet cards = new CardSet();
+                                   cards.add(Card.valueOf(a));
+                                   cards.add(Card.valueOf(b));
+                                   cards.add(Card.valueOf(c));
+                                   cards.add(Card.valueOf(d));
+                                   cards.add(Card.valueOf(e));
+                                   cards.add(Card.valueOf(f));
+                                   cards.add(Card.valueOf(g));
+                                   int h1 = Hand.eval(cards).getValue();
+                                   int h2 = Hand.fastEval(cards);
+                                   assertEquals(cards.toString(), h1, h2);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
