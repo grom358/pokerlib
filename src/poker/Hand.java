@@ -243,4 +243,167 @@ public class Hand implements Comparable<Hand> {
     static public Hand eval(Collection<Card> cards) {
         return eval(new CardSet(cards));
     }
+
+    static private final int HIGH_CARD = Category.HIGH_CARD.ordinal() << 21;
+    static private final int PAIR = Category.PAIR.ordinal() << 21;
+    static private final int TWO_PAIR = Category.TWO_PAIR.ordinal() << 21;
+    static private final int THREE_OF_A_KIND = Category.THREE_OF_A_KIND.ordinal() << 21;
+    static private final int STRAIGHT = Category.STRAIGHT.ordinal() << 21;
+    static private final int FLUSH = Category.FLUSH.ordinal() << 21;
+    static private final int FULLHOUSE = Category.FULLHOUSE.ordinal() << 21;
+    static private final int FOUR_OF_A_KIND = Category.FOUR_OF_A_KIND.ordinal() << 21;
+    static private final int STRAIGHT_FLUSH = Category.STRAIGHT_FLUSH.ordinal() << 21;
+    static private final int ACE_LOW_STRAIGHT = 0x5432E;
+
+    static private int nextSetBit(long num, int fromIndex) {
+        long mask = 0xFFFFFFFFFFFFFFFFL << fromIndex;
+        long word = num & mask;
+        if (word == 0) {
+            return -1;
+        }
+        return Long.numberOfTrailingZeros(word);
+    }
+
+    static private int encodeRanks(long rankMask, int n) {
+        int value = 0;
+        for (int i = nextSetBit(rankMask, 0), c = 0; i >= 0 && c < n; i = nextSetBit(rankMask, i + 1), c++) {
+            value <<= 4;
+            value |= 14 - (i >> 2);
+        }
+        return value;
+    }
+
+    static public int fastEval(CardSet cardSet) {
+        long cardMask = cardSet.longValue();
+        long spades = cardMask & SUIT_MASK;
+        long hearts = (cardMask >> 1) & SUIT_MASK;
+        long diamonds = (cardMask >> 2) & SUIT_MASK;
+        long clubs = (cardMask >> 3) & SUIT_MASK;
+        long ranks = (spades | hearts | diamonds | clubs);
+
+        // Ace low straight flush
+        if ((spades & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
+        }
+        if ((hearts & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
+        }
+        if ((diamonds & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
+        }
+        if ((clubs & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT_FLUSH | ACE_LOW_STRAIGHT;
+        }
+
+        // Straight flush
+        for (int i = 0; i <= 8; ++i) {
+            long handMask = (STRAIGHT_FLUSH_MASK << (i << 2));
+            if ((spades & handMask) == handMask) {
+                return STRAIGHT_FLUSH | encodeRanks(handMask, 5);
+            }
+            if ((hearts & handMask) == handMask) {
+                return STRAIGHT_FLUSH | encodeRanks(handMask, 5);
+            }
+            if ((diamonds & handMask) == handMask) {
+                return STRAIGHT_FLUSH | encodeRanks(handMask, 5);
+            }
+            if ((clubs & handMask) == handMask) {
+                return STRAIGHT_FLUSH | encodeRanks(handMask, 5);
+            }
+        }
+
+        // Four of a kind
+        long fourOfAKind = spades & hearts & diamonds & clubs;
+        if (fourOfAKind != 0) {
+            int kicker = encodeRanks(ranks & ~fourOfAKind, 1);
+            int fourOfAKindRank = encodeRanks(fourOfAKind, 1);
+            return FOUR_OF_A_KIND |
+                    (fourOfAKindRank << 16) |
+                    (fourOfAKindRank << 12) |
+                    (fourOfAKindRank << 8)  |
+                    (fourOfAKindRank << 4)  |
+                    kicker;
+        }
+
+        // Fullhouse
+        long triples = (clubs & diamonds & hearts) |
+            (clubs & diamonds & spades) |
+            (clubs & hearts & spades) |
+            (diamonds & hearts & spades);
+        long triple = Long.lowestOneBit(triples);
+        int tripleRank = triple == 0 ? 0 : encodeRanks(triple, 1);
+        long sets = (clubs & diamonds) |
+            (clubs & hearts) |
+            (clubs & spades) |
+            (diamonds & hearts) |
+            (diamonds & spades) |
+            (hearts & spades);
+        int setCount = Long.bitCount(sets);
+        if (triple != 0 && setCount >= 2) {
+            int topPairRank = encodeRanks(sets & ~triple, 1);
+            return FULLHOUSE |
+                (tripleRank << 16) |
+                (tripleRank << 12) |
+                (tripleRank << 8)  |
+                (topPairRank << 4) |
+                topPairRank;
+        }
+
+        // Flush
+        if (Long.bitCount(spades) >= 5) {
+            return FLUSH | encodeRanks(spades, 5);
+        }
+        if (Long.bitCount(hearts) >= 5) {
+            return FLUSH | encodeRanks(hearts, 5);
+        }
+        if (Long.bitCount(diamonds) >= 5) {
+            return FLUSH | encodeRanks(diamonds, 5);
+        }
+        if (Long.bitCount(clubs) >= 5) {
+            return FLUSH | encodeRanks(clubs, 5);
+        }
+
+        // Straight
+        if ((ranks & ACE_LOW_STRAIGHT_FLUSH_MASK) == ACE_LOW_STRAIGHT_FLUSH_MASK) {
+            return STRAIGHT | ACE_LOW_STRAIGHT;
+        }
+        for (int i = 0; i <= 8; ++i) {
+            long handMask = (STRAIGHT_FLUSH_MASK << (i << 2));
+            if ((ranks & handMask) == handMask) {
+                return STRAIGHT | encodeRanks(handMask, 5);
+            }
+        }
+
+        // Three of kind
+        long kickers = ranks & ~sets;
+        if (triple != 0) {
+            return THREE_OF_A_KIND |
+                (tripleRank << 16) |
+                (tripleRank << 12) |
+                (tripleRank << 8)  |
+                encodeRanks(kickers, 2);
+        }
+
+        // Two pair
+        if (setCount > 1) {
+            int pairs = encodeRanks(sets, 2);
+            int topPair = pairs >> 4;
+            int secondPair = pairs & 0xF;
+            return TWO_PAIR |
+                    (topPair << 16) |
+                    (topPair << 12) |
+                    (secondPair << 8) |
+                    (secondPair << 4) |
+                    encodeRanks(kickers, 1);
+        }
+
+        // Pair
+        if (setCount == 1) {
+            int pair = encodeRanks(sets, 1);
+            return PAIR | (pair << 16) | (pair << 12) | encodeRanks(kickers, 3);
+        }
+
+        // High Card
+        return HIGH_CARD | encodeRanks(ranks, 5);
+    }
 }
