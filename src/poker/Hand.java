@@ -115,26 +115,47 @@ public class Hand implements Comparable<Hand> {
         CardSet topPair = null;
         CardSet secondPair = null;
 
-        // Search for sets
-        for (int i = 0, n = Card.Rank.size; i < n; ++i) {
-            mask = RANK_MASK << (i * Card.Suit.size);
+        // Four of a Kind
+        long spades = val & SUIT_MASK;
+        long hearts = (val >> 1) & SUIT_MASK;
+        long diamonds = (val >> 2) & SUIT_MASK;
+        long clubs = (val >> 3) & SUIT_MASK;
+        long fourOfKind = (spades & hearts & diamonds & clubs);
+        if (fourOfKind != 0) {
+            mask = RANK_MASK << Long.numberOfTrailingZeros(fourOfKind);
+            CardSet kickers = new CardSet(val & ~mask);
+            CardList hand = (new CardSet(mask)).toList();
+            hand.add(kickers.toList().get(0));
+            return handValue(Category.FOUR_OF_A_KIND, hand);
+        }
+
+        // Triples & Pairs
+        long triples = (clubs & diamonds & hearts) |
+            (clubs & diamonds & spades) |
+            (clubs & hearts & spades) |
+            (diamonds & hearts & spades);
+        long sets = (clubs & diamonds) |
+            (clubs & hearts) |
+            (clubs & spades) |
+            (diamonds & hearts) |
+            (diamonds & spades) |
+            (hearts & spades);
+        if (triples != 0) {
+            mask = RANK_MASK << Long.numberOfTrailingZeros(triples);
             test = val & mask;
-            if (test == mask) {
-                CardSet kickers = new CardSet(val & ~test);
-                CardList hand = (new CardSet(test)).toList();
-                hand.add(kickers.toList().get(0));
-                return handValue(Category.FOUR_OF_A_KIND, hand);
-            }
-            if (threeOfKind == null || topPair == null || secondPair == null) {
-                int kindCount = Long.bitCount(test);
-                if (kindCount >= 3 && threeOfKind == null) {
-                    threeOfKind = new CardSet(test);
-                } else if (kindCount >= 2 && topPair == null) {
-                    topPair = new CardSet(test);
-                } else if (kindCount >= 2 && secondPair == null) {
-                    secondPair = new CardSet(test);
-                }
-            }
+            threeOfKind = new CardSet(test);
+            sets &= ~Long.lowestOneBit(triples); // Remove triple from sets
+        }
+        if (sets != 0) {
+            mask = RANK_MASK << Long.numberOfTrailingZeros(sets);
+            test = val & mask;
+            topPair = new CardSet(test);
+            sets &= ~Long.lowestOneBit(sets); // Remove top pair from sets
+        }
+        if (sets != 0) {
+            mask = RANK_MASK << Long.numberOfTrailingZeros(sets);
+            test = val & mask;
+            secondPair = new CardSet(test);
         }
 
         if (threeOfKind != null && topPair != null) {
