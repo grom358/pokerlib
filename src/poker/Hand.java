@@ -68,7 +68,7 @@ public class Hand implements Comparable<Hand> {
     static private final long RANK_MASK = 0xFL;
 
     static private Hand handValue(Category category, CardList cardList) {
-        int value = category.ordinal() << 1;
+        int value = category.ordinal() << 4;
         int i = 0;
         int n = Math.min(5, cardList.size());
         for (; i < n; ++i) {
@@ -244,15 +244,15 @@ public class Hand implements Comparable<Hand> {
         return eval(new CardSet(cards));
     }
 
-    static private final int HIGH_CARD = Category.HIGH_CARD.ordinal() << 21;
-    static private final int PAIR = Category.PAIR.ordinal() << 21;
-    static private final int TWO_PAIR = Category.TWO_PAIR.ordinal() << 21;
-    static private final int THREE_OF_A_KIND = Category.THREE_OF_A_KIND.ordinal() << 21;
-    static private final int STRAIGHT = Category.STRAIGHT.ordinal() << 21;
-    static private final int FLUSH = Category.FLUSH.ordinal() << 21;
-    static private final int FULLHOUSE = Category.FULLHOUSE.ordinal() << 21;
-    static private final int FOUR_OF_A_KIND = Category.FOUR_OF_A_KIND.ordinal() << 21;
-    static private final int STRAIGHT_FLUSH = Category.STRAIGHT_FLUSH.ordinal() << 21;
+    static private final int HIGH_CARD = Category.HIGH_CARD.ordinal() << 24;
+    static private final int PAIR = Category.PAIR.ordinal() << 24;
+    static private final int TWO_PAIR = Category.TWO_PAIR.ordinal() << 24;
+    static private final int THREE_OF_A_KIND = Category.THREE_OF_A_KIND.ordinal() << 24;
+    static private final int STRAIGHT = Category.STRAIGHT.ordinal() << 24;
+    static private final int FLUSH = Category.FLUSH.ordinal() << 24;
+    static private final int FULLHOUSE = Category.FULLHOUSE.ordinal() << 24;
+    static private final int FOUR_OF_A_KIND = Category.FOUR_OF_A_KIND.ordinal() << 24;
+    static private final int STRAIGHT_FLUSH = Category.STRAIGHT_FLUSH.ordinal() << 24;
     static private final int ACE_LOW_STRAIGHT = 0x5432E;
 
     static private int nextSetBit(long num, int fromIndex) {
