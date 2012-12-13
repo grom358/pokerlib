@@ -239,4 +239,8 @@ public class Hand implements Comparable<Hand> {
         cs.addAll(board);
         return eval(cs);
     }
+
+    static public Hand eval(Collection<Card> cards) {
+        return eval(new CardSet(cards));
+    }
 }
